@@ -36,3 +36,40 @@ exports.saveTodo = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.deleteTodo = async (req, res, next) => {
+  const id = req.params.id;
+  try {
+    let result = await Todo.findByIdAndRemove(id);
+    console.log(result);
+    res.status(200).json({ message: "Todo deleted Successfully" });
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    next(error);
+  }
+};
+
+exports.editTodo = async (req, res, next) => {
+  const id = req.params.id;
+  const updatedTitle = req.body.title;
+  try {
+    const existingTodo = await Todo.findById(id);
+    if (!existingTodo) {
+      const err = new Error("Todo Item not found");
+      err.statusCode = 404;
+      throw err;
+    }
+    existingTodo.title = updatedTitle;
+    const updatedTodo = await existingTodo.save();
+    res
+      .status(200)
+      .json({ message: "Todo Updated Successfully", Todo: updatedTodo });
+  } catch (error) {
+    if (!error.statusCode) {
+      error.statusCode = 500;
+    }
+    next(error);
+  }
+};
