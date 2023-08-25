@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
+import openSocket from "socket.io-client";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import { http } from "./config";
-import { getAllTodos, editTodo } from "./utility/utility";
+import { getAllTodos, editTodo, deleteTodo } from "./utility/utility";
 import TodoItem from "./Component/TodoItem/TodoItem";
 
 function App() {
@@ -12,17 +13,48 @@ function App() {
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  const isMount = useRef(true);
+
   useEffect(() => {
-    const fetchTodos = async () => {
-      try {
-        const response = await getAllTodos();
-        setTodos(response?.todos);
-      } catch (e) {
-        throw new Error(e);
-      }
-    };
-    fetchTodos();
+    if (isMount.current) {
+      isMount.current = false;
+    } else {
+      const fetchTodos = async () => {
+        try {
+          const response = await getAllTodos();
+          setTodos(response?.todos);
+        } catch (e) {
+          throw new Error(e);
+        }
+      };
+      fetchTodos();
+      const socket = openSocket(process.env.REACT_APP_BASE_URL);
+      socket.on("posts", (data) => {
+        if (data?.action === "create") {
+          addTodo(data);
+        }
+        if (data?.action === "delete") {
+          fetchTodos();
+        }
+      });
+    }
   }, []);
+
+  const addTodo = (data) => {
+    setTodos((prevState) => [data?.todo, ...prevState]);
+  };
+
+  const onDeleteTodo = async (id) => {
+    console.log(id, "deleted todo id");
+    try {
+      const response = await deleteTodo(id);
+      const newTodos = todos.filter((todo) => todo._id !== id);
+      console.log(newTodos);
+      setTodos(newTodos);
+    } catch (e) {
+      throw new Error(e);
+    }
+  };
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value);
@@ -38,6 +70,7 @@ function App() {
     e.preventDefault();
     let response;
     if (isEditing) {
+      console.log("editing running");
       try {
         response = await editTodo(selectedTodo, title);
         if (!response) {
@@ -53,8 +86,6 @@ function App() {
       }
     } else {
       response = await http.post("/add-todo", JSON.stringify({ title: title }));
-      setTodos((prevState) => [...prevState, response?.data]);
-      console.log("adding");
     }
     console.log(response);
     setTitle("");

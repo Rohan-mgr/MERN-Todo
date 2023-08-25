@@ -8,7 +8,6 @@ const TodoItem = (props) => {
   const onDeleteTodo = async (id) => {
     try {
       const response = await deleteTodo(id);
-      console.log(response);
       const newTodos = props.Todos.filter((todo) => todo._id !== id);
       props.SetTodos(newTodos);
     } catch (e) {

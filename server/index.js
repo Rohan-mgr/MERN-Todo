@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const todoRoutes = require("./routes/todo");
+const socketIO = require("./socket");
 
 const app = express();
 app.use(cors());
@@ -22,7 +23,11 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(process.env.MONGOOSE_CONNECTION_STRING)
   .then((success) => {
-    app.listen(8080);
+    const server = app.listen(8080);
     console.log("Database connected successfully.");
+    const io = socketIO.init(server);
+    io.on("connection", (socket) => {
+      console.log("Client Connected");
+    });
   })
   .catch((err) => console.log(err));

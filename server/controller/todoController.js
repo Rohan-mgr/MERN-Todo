@@ -1,4 +1,5 @@
 const Todo = require("../model/todo");
+const io = require("../socket");
 
 exports.getAllTodos = async (req, res, next) => {
   try {
@@ -20,12 +21,12 @@ exports.getAllTodos = async (req, res, next) => {
 
 exports.saveTodo = async (req, res, next) => {
   const title = req.body.title;
-  console.log(title);
   try {
     const todoItem = new Todo({
       title: title,
     });
     const saveTodo = await todoItem.save();
+    io.getIO().emit("posts", { action: "create", todo: saveTodo });
     res
       .status(200)
       .json({ message: "Todo Added Successfully", data: saveTodo });
@@ -42,6 +43,7 @@ exports.deleteTodo = async (req, res, next) => {
   try {
     let result = await Todo.findByIdAndRemove(id);
     console.log(result);
+    io.getIO().emit("posts", { action: "delete", deletedTodoId: id });
     res.status(200).json({ message: "Todo deleted Successfully" });
   } catch (error) {
     if (!error.statusCode) {
