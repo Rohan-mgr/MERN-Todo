@@ -7,9 +7,7 @@ import { deleteTodo } from "../../utility/utility";
 const TodoItem = (props) => {
   const onDeleteTodo = async (id) => {
     try {
-      const response = await deleteTodo(id);
-      const newTodos = props.Todos.filter((todo) => todo._id !== id);
-      props.SetTodos(newTodos);
+      await deleteTodo(id);
     } catch (e) {
       throw new Error(e);
     }

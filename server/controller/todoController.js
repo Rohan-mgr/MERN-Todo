@@ -65,6 +65,8 @@ exports.editTodo = async (req, res, next) => {
     }
     existingTodo.title = updatedTitle;
     const updatedTodo = await existingTodo.save();
+    io.getIO().emit("posts", { action: "update", post: updatedTodo });
+
     res
       .status(200)
       .json({ message: "Todo Updated Successfully", Todo: updatedTodo });

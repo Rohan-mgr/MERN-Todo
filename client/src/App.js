@@ -4,7 +4,7 @@ import openSocket from "socket.io-client";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import { http } from "./config";
-import { getAllTodos, editTodo, deleteTodo } from "./utility/utility";
+import { getAllTodos, editTodo } from "./utility/utility";
 import TodoItem from "./Component/TodoItem/TodoItem";
 
 function App() {
@@ -22,7 +22,7 @@ function App() {
       const fetchTodos = async () => {
         try {
           const response = await getAllTodos();
-          setTodos(response?.todos);
+          setTodos(response?.todos.reverse());
         } catch (e) {
           throw new Error(e);
         }
@@ -32,8 +32,9 @@ function App() {
       socket.on("posts", (data) => {
         if (data?.action === "create") {
           addTodo(data);
-        }
-        if (data?.action === "delete") {
+        } else if (data?.action === "delete") {
+          fetchTodos();
+        } else {
           fetchTodos();
         }
       });
@@ -42,18 +43,6 @@ function App() {
 
   const addTodo = (data) => {
     setTodos((prevState) => [data?.todo, ...prevState]);
-  };
-
-  const onDeleteTodo = async (id) => {
-    console.log(id, "deleted todo id");
-    try {
-      const response = await deleteTodo(id);
-      const newTodos = todos.filter((todo) => todo._id !== id);
-      console.log(newTodos);
-      setTodos(newTodos);
-    } catch (e) {
-      throw new Error(e);
-    }
   };
 
   const handleTitleChange = (e) => {
@@ -76,10 +65,10 @@ function App() {
         if (!response) {
           throw new Error("Updating Todo Failed");
         }
-        const updatedTodoIndex = todos.findIndex(
-          (todo) => todo?._id === selectedTodo
-        );
-        todos[updatedTodoIndex] = response?.Todo;
+        // const updatedTodoIndex = todos.findIndex(
+        //   (todo) => todo?._id === selectedTodo
+        // );
+        // todos[updatedTodoIndex] = response?.Todo;
         setIsEditing(false);
       } catch (e) {
         throw new Error(e);
@@ -116,7 +105,6 @@ function App() {
               key={item?._id}
               title={item?.title}
               Id={item?._id}
-              Todos={todos}
               SetTitle={setTitle}
               SetTodos={setTodos}
               SetEditing={setIsEditing}
