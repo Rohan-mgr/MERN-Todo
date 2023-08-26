@@ -20,6 +20,12 @@ app.use((error, req, res, next) => {
   res.status(status).json({ message: message });
 });
 
+app.get("*", (req, res, next) => {
+  res.status(200).json({
+    message: "bad request",
+  });
+});
+
 mongoose
   .connect(process.env.MONGOOSE_CONNECTION_STRING)
   .then((success) => {
